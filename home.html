@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thư viện cá nhân - Thi Thử Văn THPT Quốc Gia</title>
+    <title>Thư viện cá nhân</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
@@ -285,7 +285,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold" style="display: none;" id="header-description">THƯ VIỆN CÁ NHÂN</h1>
-<p class="text-sm md:text-base opacity-90 mt-1" style="display: none;" id="header-description">Khám phá và lưu trữ tác phẩm văn học yêu thích</p>
+<p class="text-sm md:text-base opacity-90 mt-1" style="display: none;" id="header-description">Khám phá và lưu trữ tác phẩm sách, tuyện yêu thích</p>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div id="user-info" class="hidden items-center space-x-2">
@@ -313,7 +313,7 @@
         <!-- Library Tab -->
         <div id="library-content" class="tab-content active">
             <div class="library-card p-6 mb-8">
-                <h2 class="section-title">Tìm kiếm tác phẩm văn học</h2>
+                <h2 class="section-title">Tìm kiếm sách</h2>
                 <div class="flex flex-col md:flex-row gap-4">
                     <input type="text" id="search-input" class="search-input flex-grow" placeholder="Nhập tên tác phẩm hoặc tác giả...">
                     <button id="search-btn" class="btn-primary px-6 py-3">
@@ -326,7 +326,7 @@
                 <!-- Kết quả tìm kiếm sẽ hiển thị ở đây -->
                 <div class="text-center py-12 text-gray-500">
                     <i class="fas fa-book-open text-4xl mb-4"></i>
-                    <p>Nhập từ khóa tìm kiếm để khám phá các tác phẩm văn học</p>
+                    <p>Nhập từ khóa tìm kiếm để khám phá các tác phẩm sách</p>
                 </div>
             </div>
         </div>
@@ -571,7 +571,7 @@
             try {
                 // Sử dụng AI để tìm kiếm tác phẩm
                 const prompt = `
-                    Tôi đang tìm kiếm thông tin về tác phẩm văn học hoặc tác giả: "${query}".
+                    Tôi đang tìm kiếm thông tin về tác phẩm sách, truyện hoặc tác giả: "${query}".
                     Hãy cung cấp danh sách 3-6 tác phẩm phù hợp nhất dưới dạng JSON theo định dạng sau:
                     
                     [
