@@ -1,0 +1,974 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thư viện cá nhân - Thi Thử Văn THPT Quốc Gia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        
+        body {
+            font-family: 'Noto Serif', serif;
+            background-color: #f1f5f9;
+            color: #334155;
+            line-height: 1.6;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+        
+        .library-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .library-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 8px;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e67e22;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+        }
+        
+        .search-input {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Noto Serif', serif;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            outline: none;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .close-btn:hover {
+            color: var(--dark);
+        }
+        
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px 8px 0 0;
+            background-color: #e2e8f0;
+            color: var(--dark);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tab-button.active {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .work-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .work-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .work-image {
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .favorite-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .favorite-btn:hover {
+            background-color: white;
+            transform: scale(1.1);
+        }
+        
+        .qr-modal {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .qr-code {
+            margin: 1rem auto;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        @media (max-width: 768px) {
+            .tab-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header-gradient text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold">THƯ VIỆN CÁ NHÂN</h1>
+                    <p class="text-sm md:text-base opacity-90 mt-1">Khám phá và lưu trữ tác phẩm văn học yêu thích</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="user-info" class="hidden items-center space-x-2">
+                        <span id="user-name" class="font-medium"></span>
+                        <button id="logout-btn" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-sm transition">
+                            Đăng xuất
+                        </button>
+                    </div>
+                    <div id="login-btn" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-sm transition cursor-pointer">
+                        Đăng nhập
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Tabs -->
+        <div class="flex mb-6">
+            <button id="library-tab" class="tab-button active">Thư viện</button>
+            <button id="personal-tab" class="tab-button ml-2">Thư viện cá nhân</button>
+        </div>
+        
+        <!-- Library Tab -->
+        <div id="library-content" class="tab-content active">
+            <div class="library-card p-6 mb-8">
+                <h2 class="section-title">Tìm kiếm tác phẩm văn học</h2>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="search-input" class="search-input flex-grow" placeholder="Nhập tên tác phẩm hoặc tác giả...">
+                    <button id="search-btn" class="btn-primary px-6 py-3">
+                        <i class="fas fa-search mr-2"></i> Tìm kiếm
+                    </button>
+                </div>
+            </div>
+            
+            <div id="search-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Kết quả tìm kiếm sẽ hiển thị ở đây -->
+                <div class="text-center py-12 text-gray-500">
+                    <i class="fas fa-book-open text-4xl mb-4"></i>
+                    <p>Nhập từ khóa tìm kiếm để khám phá các tác phẩm văn học</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Personal Library Tab -->
+        <div id="personal-content" class="tab-content">
+            <div class="library-card p-6 mb-8">
+                <div class="flex justify-between items-center">
+                    <h2 class="section-title">Thư viện cá nhân</h2>
+                    <div class="flex space-x-2">
+                        <button id="generate-qr-btn" class="btn-secondary px-4 py-2">
+                            <i class="fas fa-qrcode mr-2"></i> Chia sẻ
+                        </button>
+                        <button id="scan-qr-btn" class="btn-primary px-4 py-2">
+                            <i class="fas fa-camera mr-2"></i> Quét QR
+                        </button>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Các tác phẩm bạn đã lưu sẽ hiển thị tại đây</p>
+            </div>
+            
+            <div id="personal-library" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Thư viện cá nhân sẽ hiển thị ở đây -->
+                <div class="text-center py-12 text-gray-500">
+                    <i class="fas fa-heart text-4xl mb-4"></i>
+                    <p id="personal-library-empty">Đăng nhập để xem thư viện cá nhân</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Work Detail Modal -->
+    <div id="work-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="work-modal-title" class="text-xl font-bold"></h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="work-modal-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-to-library-btn" class="btn-primary">
+                    <i class="fas fa-heart mr-2"></i> Lưu vào thư viện
+                </button>
+                <button class="btn-secondary ml-2 close-btn">
+                    <i class="fas fa-times mr-2"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qr-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-xl font-bold">Chia sẻ thư viện cá nhân</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body qr-modal">
+                <p class="mb-4">Quét mã QR này để chia sẻ thư viện cá nhân của bạn</p>
+                <div id="qr-code" class="qr-code"></div>
+                <p class="mt-4 text-sm text-gray-600">Mã QR sẽ hết hạn sau 7 ngày</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary close-btn">
+                    <i class="fas fa-times mr-2"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div id="scanner-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-xl font-bold">Quét mã QR</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div id="qr-scanner" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
+                <p class="mt-4">Quét mã QR để xem thư viện cá nhân của người khác</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary close-btn">
+                    <i class="fas fa-times mr-2"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shared Library Modal -->
+    <div id="shared-library-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="shared-library-title" class="text-xl font-bold">Thư viện cá nhân</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="shared-library-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary close-btn">
+                    <i class="fas fa-times mr-2"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        }
+    </script>
+    
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+        
+        // Khởi tạo Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtuzVuanq1GhPc2Apwrxars3GXyOswCGE",
+            authDomain: "tuemy-fa424.firebaseapp.com",
+            projectId: "tuemy-fa424",
+            storageBucket: "tuemy-fa424.firebasestorage.app",
+            messagingSenderId: "1079434677092",
+            appId: "1:1079434677092:web:3d858d80391e7b2aa8c871",
+            measurementId: "G-1SSMQRMQFP"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Khởi tạo AI
+        const API_KEY = "AIzaSyDN3FpLLxpue1y481xaIhrASCVpqbKxvdQ";
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+        
+        // DOM Elements
+        const libraryTab = document.getElementById('library-tab');
+        const personalTab = document.getElementById('personal-tab');
+        const libraryContent = document.getElementById('library-content');
+        const personalContent = document.getElementById('personal-content');
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const searchResults = document.getElementById('search-results');
+        const personalLibrary = document.getElementById('personal-library');
+        const personalLibraryEmpty = document.getElementById('personal-library-empty');
+        const workModal = document.getElementById('work-modal');
+        const workModalTitle = document.getElementById('work-modal-title');
+        const workModalContent = document.getElementById('work-modal-content');
+        const saveToLibraryBtn = document.getElementById('save-to-library-btn');
+        const closeBtns = document.querySelectorAll('.close-btn');
+        const generateQrBtn = document.getElementById('generate-qr-btn');
+        const scanQrBtn = document.getElementById('scan-qr-btn');
+        const qrModal = document.getElementById('qr-modal');
+        const qrCode = document.getElementById('qr-code');
+        const scannerModal = document.getElementById('scanner-modal');
+        const qrScanner = document.getElementById('qr-scanner');
+        const sharedLibraryModal = document.getElementById('shared-library-modal');
+        const sharedLibraryTitle = document.getElementById('shared-library-title');
+        const sharedLibraryContent = document.getElementById('shared-library-content');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userInfo = document.getElementById('user-info');
+        const userName = document.getElementById('user-name');
+        
+        // Biến toàn cục
+        let currentWork = null;
+        let currentUser = null;
+        let scanner = null;
+        
+        // Xử lý đăng nhập/đăng xuất
+        loginBtn.addEventListener('click', () => {
+            window.location.href = 'login.html';
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.reload();
+            });
+        });
+
+        // Kiểm tra trạng thái đăng nhập
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Đã đăng nhập
+                currentUser = user;
+                userInfo.classList.remove('hidden');
+                loginBtn.classList.add('hidden');
+                userName.textContent = user.email;
+                
+                // Load thư viện cá nhân
+                loadPersonalLibrary(user.uid);
+            } else {
+                // Chưa đăng nhập
+                currentUser = null;
+                userInfo.classList.add('hidden');
+                loginBtn.classList.remove('hidden');
+                personalLibraryEmpty.textContent = "Đăng nhập để xem thư viện cá nhân";
+            }
+        });
+
+        // Chuyển tab
+        libraryTab.addEventListener('click', () => {
+            libraryTab.classList.add('active');
+            personalTab.classList.remove('active');
+            libraryContent.classList.add('active');
+            personalContent.classList.remove('active');
+        });
+
+        personalTab.addEventListener('click', () => {
+            personalTab.classList.add('active');
+            libraryTab.classList.remove('active');
+            personalContent.classList.add('active');
+            libraryContent.classList.remove('active');
+        });
+
+        // Tìm kiếm tác phẩm
+        searchBtn.addEventListener('click', searchWorks);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchWorks();
+        });
+
+        async function searchWorks() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            
+            // Hiển thị loading
+            searchResults.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p>Đang tìm kiếm tác phẩm...</p>
+                </div>
+            `;
+            
+            try {
+                // Sử dụng AI để tìm kiếm tác phẩm
+                const prompt = `
+                    Tôi đang tìm kiếm thông tin về tác phẩm văn học hoặc tác giả: "${query}".
+                    Hãy cung cấp danh sách 3-6 tác phẩm phù hợp nhất dưới dạng JSON theo định dạng sau:
+                    
+                    [
+                        {
+                            "title": "Tên tác phẩm",
+                            "author": "Tác giả",
+                            "type": "Thể loại (truyện ngắn, tiểu thuyết, thơ, v.v.)",
+                            "year": "Năm xuất bản",
+                            "description": "Mô tả ngắn gọn (khoảng 50 từ)",
+                            "image": "URL hình ảnh đại diện (nếu có)"
+                        },
+                        ...
+                    ]
+                    
+                    Ưu tiên các tác phẩm trong chương trình Ngữ Văn THPT hoặc các tác phẩm kinh điển của văn học Việt Nam và thế giới.
+                `;
+                
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text();
+                
+                // Tìm và trích xuất JSON từ phản hồi
+                const jsonStart = text.indexOf('[');
+                const jsonEnd = text.lastIndexOf(']') + 1;
+                const jsonString = text.substring(jsonStart, jsonEnd);
+                const works = JSON.parse(jsonString);
+                
+                // Hiển thị kết quả
+                displaySearchResults(works);
+            } catch (error) {
+                console.error("Lỗi khi tìm kiếm:", error);
+                searchResults.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-red-500">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displaySearchResults(works) {
+            if (!works || works.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <i class="fas fa-book-open text-4xl mb-4"></i>
+                        <p>Không tìm thấy tác phẩm phù hợp. Vui lòng thử từ khóa khác.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            searchResults.innerHTML = '';
+            
+            works.forEach(work => {
+                const workCard = document.createElement('div');
+                workCard.className = 'work-card';
+                workCard.innerHTML = `
+                    <div class="work-image" style="background-image: url('${work.image || 'https://via.placeholder.com/300x200?text=' + encodeURIComponent(work.title)}')"></div>
+                    <div class="p-4 relative">
+                        <h4 class="font-bold text-lg mb-1">${work.title}</h4>
+                        <p class="text-sm text-gray-600 mb-2">${work.author} • ${work.type} • ${work.year || 'N/A'}</p>
+                        <p class="text-sm text-gray-700">${work.description}</p>
+                    </div>
+                `;
+                
+                workCard.addEventListener('click', () => {
+                    showWorkDetail(work);
+                });
+                
+                searchResults.appendChild(workCard);
+            });
+        }
+
+        // Hiển thị chi tiết tác phẩm
+        async function showWorkDetail(work) {
+            currentWork = work;
+            
+            // Hiển thị loading
+            workModalTitle.textContent = "Đang tải...";
+            workModalContent.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p>Đang tải thông tin tác phẩm...</p>
+                </div>
+            `;
+            
+            // Hiển thị modal
+            workModal.classList.add('active');
+            
+            try {
+                // Sử dụng AI để lấy thông tin chi tiết
+                const prompt = `
+                    Hãy cung cấp thông tin chi tiết về tác phẩm "${work.title}" của tác giả ${work.author} với các nội dung sau:
+                    
+                    1. Giới thiệu chung về tác phẩm (xuất xứ, hoàn cảnh sáng tác)
+                    2. Tóm tắt nội dung chính (khoảng 150 từ)
+                    3. Giá trị nghệ thuật (đặc sắc về ngôn ngữ, bố cục, biện pháp tu từ...)
+                    4. Giá trị nội dung (thông điệp, ý nghĩa tác phẩm)
+                    5. Vị trí, vai trò của tác phẩm trong sự nghiệp tác giả và nền văn học
+                    6. Một số trích dẫn nổi bật (nếu có)
+                    
+                    Trả lời bằng HTML với các thẻ h3 cho tiêu đề mục và p cho nội dung. Tổng độ dài khoảng 1000 từ.
+                    
+                    Yêu cầu:
+                    - Ngôn ngữ mạch lạc, dễ hiểu
+                    - Bám sát chương trình Ngữ Văn THPT
+                    - Có thể thêm các thẻ strong, em, u để nhấn mạnh nội dung quan trọng
+                `;
+                
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const content = response.text();
+                
+                // Hiển thị thông tin
+                workModalTitle.textContent = `${work.title} - ${work.author}`;
+                workModalContent.innerHTML = content;
+                
+                // Kiểm tra xem tác phẩm đã được lưu chưa
+                if (currentUser) {
+                    checkIfWorkIsSaved(work);
+                } else {
+                    saveToLibraryBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Đăng nhập để lưu';
+                    saveToLibraryBtn.disabled = true;
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy thông tin tác phẩm:", error);
+                workModalContent.innerHTML = `
+                    <div class="text-center py-8 text-red-500">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>Có lỗi xảy ra khi tải thông tin tác phẩm. Vui lòng thử lại.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Kiểm tra xem tác phẩm đã được lưu chưa
+        async function checkIfWorkIsSaved(work) {
+            if (!currentUser) return;
+            
+            try {
+                const snapshot = await db.collection('user_libraries')
+                    .where('userId', '==', currentUser.uid)
+                    .where('work.title', '==', work.title)
+                    .where('work.author', '==', work.author)
+                    .limit(1)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    saveToLibraryBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Đã lưu';
+                    saveToLibraryBtn.disabled = true;
+                } else {
+                    saveToLibraryBtn.innerHTML = '<i class="fas fa-heart mr-2"></i> Lưu vào thư viện';
+                    saveToLibraryBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Lỗi khi kiểm tra thư viện:", error);
+            }
+        }
+
+        // Lưu tác phẩm vào thư viện cá nhân
+        saveToLibraryBtn.addEventListener('click', async () => {
+            if (!currentUser || !currentWork) return;
+            
+            try {
+                // Thêm vào Firestore
+                await db.collection('user_libraries').add({
+                    userId: currentUser.uid,
+                    work: currentWork,
+                    content: workModalContent.innerHTML,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Cập nhật UI
+                saveToLibraryBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Đã lưu';
+                saveToLibraryBtn.disabled = true;
+                
+                // Cập nhật thư viện cá nhân
+                loadPersonalLibrary(currentUser.uid);
+                
+                // Hiển thị thông báo
+                alert("Đã lưu tác phẩm vào thư viện cá nhân!");
+            } catch (error) {
+                console.error("Lỗi khi lưu tác phẩm:", error);
+                alert("Có lỗi xảy ra khi lưu tác phẩm. Vui lòng thử lại.");
+            }
+        });
+
+        // Tải thư viện cá nhân
+        async function loadPersonalLibrary(userId) {
+            if (!userId) {
+                personalLibraryEmpty.textContent = "Đăng nhập để xem thư viện cá nhân";
+                return;
+            }
+            
+            personalLibrary.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p>Đang tải thư viện cá nhân...</p>
+                </div>
+            `;
+            
+            try {
+                const snapshot = await db.collection('user_libraries')
+                    .where('userId', '==', userId)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                if (snapshot.empty) {
+                    personalLibrary.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-500">
+                            <i class="fas fa-bookmark text-4xl mb-4"></i>
+                            <p>Thư viện cá nhân của bạn trống</p>
+                            <p class="text-sm mt-2">Lưu các tác phẩm yêu thích để xem lại sau</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                personalLibrary.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const workCard = document.createElement('div');
+                    workCard.className = 'work-card';
+                    workCard.innerHTML = `
+                        <div class="work-image" style="background-image: url('${data.work.image || 'https://via.placeholder.com/300x200?text=' + encodeURIComponent(data.work.title)}')">
+                            <div class="favorite-btn">
+                                <i class="fas fa-heart text-red-500"></i>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <h4 class="font-bold text-lg mb-1">${data.work.title}</h4>
+                            <p class="text-sm text-gray-600 mb-2">${data.work.author} • ${data.work.type} • ${data.work.year || 'N/A'}</p>
+                            <p class="text-sm text-gray-700 line-clamp-2">${data.work.description}</p>
+                        </div>
+                    `;
+                    
+                    workCard.addEventListener('click', () => {
+                        showSavedWorkDetail(data);
+                    });
+                    
+                    personalLibrary.appendChild(workCard);
+                });
+            } catch (error) {
+                console.error("Lỗi khi tải thư viện:", error);
+                personalLibrary.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-red-500">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>Có lỗi xảy ra khi tải thư viện. Vui lòng thử lại.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Hiển thị chi tiết tác phẩm đã lưu
+        function showSavedWorkDetail(data) {
+            workModalTitle.textContent = `${data.work.title} - ${data.work.author}`;
+            workModalContent.innerHTML = data.content;
+            
+            // Ẩn nút lưu vì đã lưu rồi
+            saveToLibraryBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Đã lưu';
+            saveToLibraryBtn.disabled = true;
+            
+            workModal.classList.add('active');
+        }
+
+        // Chia sẻ thư viện bằng QR code
+        generateQrBtn.addEventListener('click', () => {
+            if (!currentUser) {
+                alert("Vui lòng đăng nhập để sử dụng tính năng này");
+                return;
+            }
+            
+            // Tạo mã QR
+            const qr = qrcode(0, 'L');
+            qr.addData(`library:${currentUser.uid}`);
+            qr.make();
+            
+            // Hiển thị mã QR
+            qrCode.innerHTML = qr.createImgTag(4);
+            qrModal.classList.add('active');
+        });
+
+        // Quét mã QR
+        scanQrBtn.addEventListener('click', () => {
+            if (!currentUser) {
+                alert("Vui lòng đăng nhập để sử dụng tính năng này");
+                return;
+            }
+            
+            scannerModal.classList.add('active');
+            
+            // Tạo scanner (giả lập vì trình duyệt không hỗ trợ quét thật)
+            qrScanner.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-qrcode text-4xl text-blue-500 mb-4"></i>
+                    <p>Trình duyệt không hỗ trợ quét QR thật</p>
+                    <p class="text-sm mt-4">Vui lòng nhập mã thủ công:</p>
+                    <input type="text" id="manual-qr-input" class="border p-2 mt-2 w-full max-w-xs" placeholder="Nhập mã thư viện">
+                    <button id="manual-qr-btn" class="btn-primary mt-4 px-4 py-2">Xác nhận</button>
+                </div>
+            `;
+            
+            document.getElementById('manual-qr-btn').addEventListener('click', () => {
+                const manualInput = document.getElementById('manual-qr-input').value.trim();
+                if (manualInput.startsWith('library:')) {
+                    const userId = manualInput.split(':')[1];
+                    viewSharedLibrary(userId);
+                } else {
+                    alert("Mã không hợp lệ. Vui lòng thử lại.");
+                }
+            });
+        });
+
+        // Xem thư viện được chia sẻ
+        async function viewSharedLibrary(userId) {
+            if (userId === currentUser?.uid) {
+                alert("Đây là thư viện của bạn!");
+                return;
+            }
+            
+            scannerModal.classList.remove('active');
+            sharedLibraryContent.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p>Đang tải thư viện...</p>
+                </div>
+            `;
+            
+            try {
+                // Lấy thông tin người dùng
+                const userDoc = await db.collection('users').doc(userId).get();
+                const userData = userDoc.data();
+                
+                // Đặt tiêu đề
+                sharedLibraryTitle.textContent = `Thư viện của ${userData?.displayName || 'người dùng'}`;
+                
+                // Lấy thư viện
+                const snapshot = await db.collection('user_libraries')
+                    .where('userId', '==', userId)
+                    .orderBy('createdAt', 'desc')
+                    .limit(20)
+                    .get();
+                
+                if (snapshot.empty) {
+                    sharedLibraryContent.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-gray-500">
+                            <i class="fas fa-bookmark text-4xl mb-4"></i>
+                            <p>Thư viện này hiện đang trống</p>
+                        </div>
+                    `;
+                } else {
+                    sharedLibraryContent.innerHTML = '';
+                    
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const workCard = document.createElement('div');
+                        workCard.className = 'work-card';
+                        workCard.innerHTML = `
+                            <div class="work-image" style="background-image: url('${data.work.image || 'https://via.placeholder.com/300x200?text=' + encodeURIComponent(data.work.title)}')"></div>
+                            <div class="p-4">
+                                <h4 class="font-bold text-lg mb-1">${data.work.title}</h4>
+                                <p class="text-sm text-gray-600 mb-2">${data.work.author} • ${data.work.type} • ${data.work.year || 'N/A'}</p>
+                                <p class="text-sm text-gray-700 line-clamp-2">${data.work.description}</p>
+                            </div>
+                        `;
+                        
+                        workCard.addEventListener('click', () => {
+                            showSavedWorkDetail(data);
+                        });
+                        
+                        sharedLibraryContent.appendChild(workCard);
+                    });
+                }
+                
+                sharedLibraryModal.classList.add('active');
+            } catch (error) {
+                console.error("Lỗi khi tải thư viện chia sẻ:", error);
+                sharedLibraryContent.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-red-500">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>Có lỗi xảy ra khi tải thư viện. Vui lòng thử lại.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Đóng modal
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                workModal.classList.remove('active');
+                qrModal.classList.remove('active');
+                scannerModal.classList.remove('active');
+                sharedLibraryModal.classList.remove('active');
+            });
+        });
+
+        // Đóng modal khi click bên ngoài
+        [workModal, qrModal, scannerModal, sharedLibraryModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
